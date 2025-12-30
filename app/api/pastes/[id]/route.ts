@@ -2,9 +2,9 @@ import { NextRequest, NextResponse } from 'next/server';
 import dbConnect from '../../../../lib/mongodb';
 import Paste from '../../../../lib/models/Paste';
 
-export async function GET(req: NextRequest, { params }: { params: { id: string } }) {
+export async function GET(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   await dbConnect();
-  const { id } = params;
+  const { id } = await params;
 
   const now = process.env.TEST_MODE === '1' && req.headers.get('x-test-now-ms')
     ? new Date(Number(req.headers.get('x-test-now-ms')))

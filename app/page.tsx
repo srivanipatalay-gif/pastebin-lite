@@ -1,6 +1,13 @@
 'use client';
 import { useEffect, useState } from 'react';
 
+interface User {
+  _id: string;
+  name: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
 interface Paste {
   _id: string;
   title: string;
@@ -10,11 +17,12 @@ interface Paste {
   updatedAt: string;
 }
 
-interface User {
-  _id: string;
-  name: string;
-  createdAt: string;
-  updatedAt: string;
+interface NewPasteForm {
+  title: string;
+  content: string;
+  language: string;
+  ttl_seconds: string;
+  max_views: string;
 }
 
 export default function HomePage() {
@@ -23,6 +31,7 @@ export default function HomePage() {
   const [pastes, setPastes] = useState<Paste[]>([]);
   const [newUserName, setNewUserName] = useState('');
   const [createdPasteUrl, setCreatedPasteUrl] = useState<string | null>(null);
+  const [newPaste, setNewPaste] = useState<NewPasteForm>({ title: '', content: '', language: 'javascript', ttl_seconds: '', max_views: '' });
 
   useEffect(() => {
     fetch('/api/healthz')
