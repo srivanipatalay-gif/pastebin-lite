@@ -1,17 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { MongoClient, ObjectId } from 'mongodb';
-
-let client: MongoClient;
-let db: any;
-
-async function connectToDB() {
-  if (!client) {
-    client = new MongoClient(process.env.MONGODB_URI!);
-    await client.connect();
-    db = client.db();
-  }
-  return db;
-}
+import clientPromise from '@/lib/mongodb';
+import { ObjectId } from 'mongodb';
 
 export async function GET(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
@@ -20,7 +9,8 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
       ? new Date(Number(req.headers.get('x-test-now-ms')))
       : new Date();
 
-    const db = await connectToDB();
+    const client = await clientPromise;
+    const db = client.db("pastebin-lite");
     const collection = db.collection("pastes");
     const paste = await collection.findOne({ _id: new ObjectId(id) });
 

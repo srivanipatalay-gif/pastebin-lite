@@ -1,21 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
-import { MongoClient } from "mongodb";
-
-let client: MongoClient;
-let db: any;
-
-async function connectToDB() {
-  if (!client) {
-    client = new MongoClient(process.env.MONGODB_URI!);
-    await client.connect();
-    db = client.db(); // default database from URI
-  }
-  return db;
-}
+import clientPromise from "@/lib/mongodb";
 
 export async function GET() {
   try {
-    const db = await connectToDB();
+    const client = await clientPromise;
+    const db = client.db("pastebin-lite");
     const collection = db.collection("pastes");
     const pastes = await collection.find({}).toArray();
     return NextResponse.json(pastes);
@@ -33,8 +22,13 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Content missing" }, { status: 400 });
     }
 
-    const db = await connectToDB();
+    const client = await clientPromise;
+    const db = client.db("pastebin-lite");
     const collection = db.collection("pastes");
+
+    const now = new Date();
+    const expires_at = data.ttl_seconds ? new Date(now.getTime() + data.ttl_seconds * 1000) : null;
+    const remaining_views = data.max_views || null;
 
     const result = await collection.insertOne({
       content: data.content,
@@ -42,6 +36,8 @@ export async function POST(req: NextRequest) {
       max_views: data.max_views || 1,
       title: data.title || 'Untitled',
       language: data.language || 'text',
+      expires_at,
+      remaining_views,
       createdAt: new Date(),
     });
 

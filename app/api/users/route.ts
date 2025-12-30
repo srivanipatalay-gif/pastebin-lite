@@ -1,21 +1,10 @@
 import { NextResponse } from 'next/server';
-import { MongoClient } from 'mongodb';
-
-let client: MongoClient;
-let db: any;
-
-async function connectToDB() {
-  if (!client) {
-    client = new MongoClient(process.env.MONGODB_URI!);
-    await client.connect();
-    db = client.db();
-  }
-  return db;
-}
+import clientPromise from '@/lib/mongodb';
 
 export async function GET() {
   try {
-    const db = await connectToDB();
+    const client = await clientPromise;
+    const db = client.db("pastebin-lite");
     const collection = db.collection("users");
     const users = await collection.find({}).toArray();
     return NextResponse.json(users);
@@ -32,7 +21,8 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "Name missing" }, { status: 400 });
     }
 
-    const db = await connectToDB();
+    const client = await clientPromise;
+    const db = client.db("pastebin-lite");
     const collection = db.collection("users");
 
     const result = await collection.insertOne({
