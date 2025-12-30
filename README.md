@@ -1,36 +1,80 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Pastebin Lite
 
-## Getting Started
+A simple, self-hosted pastebin service built with Next.js, allowing users to share code snippets with optional TTL (time-to-live) and view limits.
 
-First, run the development server:
+## Features
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
+- Create and share code pastes
+- Optional TTL for automatic expiration
+- Optional view limits
+- Deterministic expiry for testing (TEST_MODE)
+- Responsive UI with Tailwind CSS
+- MongoDB for data persistence
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+## How to Run Locally
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+1. **Prerequisites**:
+   - Node.js (v18+)
+   - MongoDB (local or MongoDB Atlas)
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+2. **Clone and Install**:
+   ```bash
+   git clone <your-repo-url>
+   cd pastebin-lite
+   npm install
+   ```
 
-## Learn More
+3. **Environment Setup**:
+   Create `.env.local`:
+   ```
+   MONGODB_URI=mongodb://localhost:27017/pastebin-lite
+   TEST_MODE=1
+   NEXT_PUBLIC_BASE_URL=http://localhost:3000
+   ```
 
-To learn more about Next.js, take a look at the following resources:
+4. **Start MongoDB** (if local):
+   ```bash
+   mongod
+   ```
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+5. **Run the App**:
+   ```bash
+   npm run dev
+   ```
+   Open [http://localhost:3000](http://localhost:3000)
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+## API Endpoints
 
-## Deploy on Vercel
+- `GET /api/healthz` - Health check
+- `POST /api/pastes` - Create a paste (body: content, title?, language?, ttl_seconds?, max_views?)
+- `GET /api/pastes/:id` - Get paste JSON
+- `GET /p/:id` - View paste in HTML
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+## Persistence Layer
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+Uses MongoDB with Mongoose for data storage. Pastes are stored with:
+- Content, title, language
+- expires_at (Date) for TTL
+- remaining_views (Number) for view limits
+- Timestamps for creation/update
+
+Data persists across server restarts and supports serverless environments.
+
+## Important Design Decisions
+
+- **TTL and View Limits**: Implemented at the API level with database updates on each view.
+- **Deterministic Testing**: TEST_MODE uses x-test-now-ms header for predictable expiry testing.
+- **Error Handling**: 404 responses for expired or view-limit exceeded pastes.
+- **Frontend**: Client-side form for creation, server-side rendering for paste viewing.
+- **Security**: Basic input handling; no authentication implemented.
+- **Deployment**: Designed for Vercel with environment variables for URLs.
+
+## Deployment
+
+Deploy to Vercel:
+1. Push to GitHub
+2. Connect repo to Vercel
+3. Set environment variables (MONGODB_URI, TEST_MODE, NEXT_PUBLIC_BASE_URL)
+4. Deploy
+
+No manual migrations required - Mongoose handles schema.
